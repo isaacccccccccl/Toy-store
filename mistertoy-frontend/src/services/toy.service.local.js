@@ -15,13 +15,18 @@ export const toyService = {
 }
 
 function query(filterBy = {}) {
+    console.log(filterBy)
     if (!filterBy.txt) filterBy.txt = ''
     if (!filterBy.maxPrice) filterBy.maxPrice = Infinity
+    
+    // if (filterBy.inStock === '') 
     const regExp = new RegExp(filterBy.txt, 'i')
     return storageService.query(STORAGE_KEY)
         .then(toys => {
-            return toys.filter(toy => 
-                regExp.test(toy.name) && 
+            if(filterBy.labels.length) toys = toys.filter(toy => toy.labels.every(label => label.includes(filterBy.labels))) 
+            if(filterBy.inStock !== '' ) toys = toys.filter(toy => toy.inStock === filterBy.inStock)
+            return toys.filter(toy =>
+                regExp.test(toy.name) &&
                 toy.price <= filterBy.maxPrice
             )
         })
@@ -59,7 +64,7 @@ function getRandomToy() {
 }
 
 function getDefaultFilter() {
-    return { txt: '', maxPrice: '' }
+    return { txt: '', maxPrice: '', inStock: '', labels: [] }
 }
 
 function _createToys() {
@@ -74,13 +79,31 @@ function _createToys() {
     }
     utilService.saveToStorage(STORAGE_KEY, toys)
 }
+
 function _createToy(id, name, price, labels, createdAt, inStock) {
-    const toy = getEmptyToy(id, name, price, labels, createdAt, inStock)
-    toy._id = utilService.makeId()
-    toy.name = 'New Toy'
-    toy.price = utilService.getRandomIntInclusive(10, 200)
-    toy.labels = []
-    toy.createdAt = Date.now()
-    toy.inStock = Math.random() < 0.8
-    return toy
+    const toy = getEmptyToy(id, name, price, labels, createdAt, inStock);
+    toy._id = utilService.makeId();
+    toy.name = 'New Toy';
+    toy.price = utilService.getRandomIntInclusive(10, 200);
+    toy.labels = _getRandomLabels(); // Assign random labels
+    toy.createdAt = Date.now();
+    toy.inStock = Math.random() < 0.8 ? 'true' : 'false';
+    return toy;
+}
+
+// Function to get random labels from the labels array
+function _getRandomLabels() {
+    const labels = ['On wheels', 'Box game', 'Art', 'Baby', 'Doll', 'Puzzle',
+        'Outdoor', 'Battery Powered']
+    const selectedLabels = []
+    const numLabels = utilService.getRandomIntInclusive(1, 3) // Get 1 to 3 random labels
+    const labelsCopy = [...labels]
+
+    for (let i = 0; i < numLabels; i++) {
+        const randIdx = utilService.getRandomIntInclusive(0, labelsCopy.length - 1)
+        selectedLabels.push(labelsCopy[randIdx]);
+        labelsCopy.splice(randIdx, 1); // Remove selected label to prevent duplicates
+    }
+
+    return selectedLabels
 }

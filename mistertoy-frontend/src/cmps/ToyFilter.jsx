@@ -15,7 +15,13 @@ export function ToyFilter({ filterBy, onSetFilter }) {
     function handleChange({ target }) {
         let { value, name: field, type } = target
         value = type === 'number' ? +value : value
-        setFilterByToEdit((prevFilter) => ({ ...prevFilter, [field]: value }))
+        if (field === "labels") {
+            const selectedOptions = Array.from(target.selectedOptions, option => option.value)
+            setFilterByToEdit((prevFilter) => ({ ...prevFilter, labels: selectedOptions }))
+        } else {
+            setFilterByToEdit((prevFilter) => ({ ...prevFilter, [field]: value }))
+        }
+        // setFilterByToEdit((prevFilter) => ({ ...prevFilter, [field]: value }))
     }
     
     // console.log(filterByToEdit)
@@ -40,6 +46,29 @@ export function ToyFilter({ filterBy, onSetFilter }) {
                     value={filterByToEdit.maxPrice || ''}
                     onChange={handleChange}
                 />
+
+                <label htmlFor="inStock">In Stock</label>
+                <select name="inStock" id="inStock" onChange={handleChange}>
+                    <option value="">All</option>
+                    <option value="false">Not in stock</option>
+                    <option value="true">in stock</option>
+                </select>
+
+                <label htmlFor="labels">Toy Labels:</label>
+                <select 
+                    id="labels" 
+                    name="labels" 
+                    multiple
+                    value={filterByToEdit.labels || []} 
+                    onChange={(e) => {
+                        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                        setFilterByToEdit((prevFilter) => ({ ...prevFilter, labels: selectedOptions }));
+                    }}
+                >
+                    {['On wheels', 'Box game', 'Art', 'Baby', 'Doll', 'Puzzle', 'Outdoor', 'Battery Powered'].map(label => (
+                        <option key={label} value={label}>{label}</option>
+                    ))}
+                </select>
 
             </form>
 
